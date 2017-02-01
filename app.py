@@ -104,7 +104,7 @@ def parse(input_texts, expected_lang):
 #  		"text": "Dies ist eine Nachricht"
 #  	}, {
 #        "id": 2,
-#  		"text": "Und hier bin ich böse das ist scheisse"
+#  		"text": "Und hier bin ich boese das ist scheisse"
 #  	}],
 #  	"expected_language": "German"
 #  }

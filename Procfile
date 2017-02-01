@@ -1,1 +1,1 @@
-web: python sentimentanalyserpython2/app.py
+web: python app.py
