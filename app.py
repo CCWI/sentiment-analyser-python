@@ -127,7 +127,7 @@ def get_version():
 
 @app.route('/')
 def hello_world():
-    return 'Sentiment Analyser Root'
+    return 'Sentiment Analyser Root. \n Usage: \n - to get the version GET /sat/api/version \n to get the sentiment analysis POST /sat/api/sentiment'
 
 
 if __name__ == '__main__':
