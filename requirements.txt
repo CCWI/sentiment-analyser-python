@@ -1,2 +1,3 @@
 Flask
 semantria-sdk-2x
+gunicorn
