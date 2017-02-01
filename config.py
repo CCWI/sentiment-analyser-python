@@ -3,7 +3,6 @@
 ##Version of the current api
 version = "v1.0"
 
-##Semantria API and Key
 key = "b5bb5ce9-2c14-4ff6-9ca3-71d2e66a8653"
 secret = "77788545-3d4e-410f-a992-564c2f19b38e"
 
