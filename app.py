@@ -126,9 +126,8 @@ def get_version():
 
 
 @app.route('/')
-def hello_world():
-    return 'Sentiment Analyser Root. \n Usage: \n - to get the version GET /sat/api/version \n to get the sentiment analysis POST /sat/api/sentiment'
-
+def root():
+    return app.send_static_file('index.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
