@@ -8,6 +8,7 @@ from config import version, key, secret, german_conf_twitter_active, german_conf
 
 app = Flask(__name__)
 
+
 class SatException(Exception):
     pass
 
@@ -122,6 +123,11 @@ def get_sentiment():
 @app.route('/sat/api/version', methods=['GET'])
 def get_version():
     return version
+
+
+@app.route('/')
+def hello_world():
+    return 'Sentiment Analyser Root'
 
 
 if __name__ == '__main__':
