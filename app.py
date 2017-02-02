@@ -7,8 +7,9 @@ from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 import mysql.connector as mariadb
-#Uncomment when config file is present
-#from config import key, secret, german_conf_twitter_active, german_conf
+
+# Uncomment when config file is present
+# from config import key, secret, german_conf_twitter_active, german_conf
 
 app = Flask(__name__)
 
@@ -26,7 +27,7 @@ def update_db():
     print "Updating Db entries..."
     print "Connection to DB."
     # connect to db
-    mariadb_connection = mariadb.connect(host="",port=3306,user='', password='', database='')
+    mariadb_connection = mariadb.connect(host="", port=3306, user='', password='', database='')
     cursor = mariadb_connection.cursor()
     print "Execute Select Statement"
     # get data
@@ -49,7 +50,7 @@ def update_db():
     try:
         for doc in docs:
             print doc["sentiment"]
-            #cursor.execute("UPDATE post SET sentiment = " + doc["sentiment"] + "  WHERE id = " + doc["id"])
+            # cursor.execute("UPDATE post SET sentiment = " + doc["sentiment"] + "  WHERE id = " + doc["id"])
     except mariadb.Error as error:
         print("Error: {}".format(error))
 
