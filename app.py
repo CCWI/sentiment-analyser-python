@@ -2,9 +2,13 @@ import os
 import uuid
 import semantria
 import time
-from flask import Flask, jsonify, request
-
-from config import version, key, secret, german_conf_twitter_active, german_conf
+import atexit
+from flask import Flask
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+import mysql.connector as mariadb
+#Uncomment when config file is present
+#from config import key, secret, german_conf_twitter_active, german_conf
 
 app = Flask(__name__)
 
@@ -14,9 +18,45 @@ class SatException(Exception):
 
 
 def error_handling(statuscode, message):
-    return jsonify({'message': message}), statuscode
+    print message
 
 
+# Function to update the Db
+def update_db():
+    print "Updating Db entries..."
+    print "Connection to DB."
+    # connect to db
+    mariadb_connection = mariadb.connect(host="",port=3306,user='', password='', database='')
+    cursor = mariadb_connection.cursor()
+    print "Execute Select Statement"
+    # get data
+    cursor.execute("SELECT id,text FROM post WHERE sentiment IS NULL LIMIT 100")
+
+    if cursor.rowcount == 0:
+        print("No values updated.")
+        mariadb_connection.close()
+        return
+
+    # prepare data
+    input_texts = []
+    for id, text in cursor:
+        input_texts.append({"id": id, "text": text})
+
+    # parse for sentiment
+    docs = parse(input_texts, 'German')
+
+    # update database
+    try:
+        for doc in docs:
+            print doc["sentiment"]
+            #cursor.execute("UPDATE post SET sentiment = " + doc["sentiment"] + "  WHERE id = " + doc["id"])
+    except mariadb.Error as error:
+        print("Error: {}".format(error))
+
+    print "Updated " + str(len(docs)) + " entries in the database."
+
+
+# Function to parse input text to a maximum of 100 pieces in a certain language (only German supported atm).
 def parse(input_texts, expected_lang):
     if len(input_texts) > 100:
         raise SatException("Too many inputs. Input documents limited at 100 per API call!")
@@ -69,8 +109,10 @@ def parse(input_texts, expected_lang):
         time.sleep(2)
         # get processed documents
         status_more140 = session.getProcessedDocuments(lang_id_more140)
+        print "Added " + str(len(status_more140)) + " entries to result_more140"
         results_more140.extend(status_more140)
         satus_less140 = session.getProcessedDocuments(lang_id_less140)
+        print "Added " + str(len(satus_less140)) + " entries to result_less140"
         results_less140.extend(satus_less140)
 
     # Add sentiment value to all entries and remove those from list which arent in expected language
@@ -97,37 +139,18 @@ def parse(input_texts, expected_lang):
     return docs
 
 
-# Expects JSON to be formatted as:
-# ATM only German is allowed as expected language
-# {
-#  	"messages": [{
-#        "id": 1,
-#  		"text": "Dies ist eine Nachricht"
-#  	}, {
-#        "id": 2,
-#  		"text": "Und hier bin ich boese das ist scheisse"
-#  	}],
-#  	"expected_language": "German"
-#  }
-@app.route('/sat/api/v1.0/sentiment', methods=['POST'])
-def get_sentiment():
-    if not request.json or not 'messages' in request.json or not 'expected_language' in request.json:
-        return error_handling(400, "No 'messages' or 'expected_language' key in json")
-    try:
-        sentiment_value = parse(request.json.get('messages'), request.json.get('expected_language'))
-    except SatException as e:
-        return error_handling(400, str(e))
-    return jsonify(sentiment_value), 201
+update_db()
+# scheduler = BackgroundScheduler()
+# scheduler.start()
+# scheduler.add_job(
+#     func=update_db,
+#     trigger=IntervalTrigger(minutes=1),
+#     id='updatedb_job',
+#     name='Looks for new entries in the database and adds their sentiment value',
+#     replace_existing=True)
+# # Shut down the scheduler when exiting the app
+# atexit.register(lambda: scheduler.shutdown())
 
-
-@app.route('/sat/api/version', methods=['GET'])
-def get_version():
-    return version
-
-
-@app.route('/')
-def root():
-    return app.send_static_file('index.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))

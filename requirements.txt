@@ -1,3 +1,4 @@
 Flask
 semantria-sdk-2x
-
+APScheduler
+mysql-connector
