@@ -12,8 +12,8 @@ german_conf_twitter_active = "3ad1741525fb9176d37d3a5b9767bca7"
 #english_conf = "0e12c835-05b7-4563-9f22-6f9478372da1"
 
 # database
-db_host = ""
-port =
-user = ""
-password = ""
-database = ""
+db_host =
+db_port =
+db_user =
+db_password =
+db_name =
