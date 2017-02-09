@@ -141,7 +141,7 @@ class AlchemyProvider(SentimentProvider):
                                                doc_sentiment["score"] if "score" in doc_sentiment else 0,
                                                doc_sentiment["mixed"] if 'mixed' in doc_sentiment else None)
             responses.append(sentiment_response)
-            return responses
+        return responses
 
 
 class SentimentResponse(object):

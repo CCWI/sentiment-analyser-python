@@ -42,22 +42,25 @@ def update_db():
                     for id, text in cursor:
                         input_texts.append({"id": id, "text": text})
 
-                        # parse for sentiment
-                        docs = provider.parse(input_texts, 'German')
+                    print(len(input_texts))
 
-                        if docs is not None:
-                            # update database
-                            for doc in docs:
-                                stmt = 'INSERT INTO sentiment(`sentimentProvider_id`, `comment_id`, `sentiment`, `mixed`) VALUES("' + str(
-                                    provider.provider_id()) + '", "' + str(
-                                    doc.id()) + '", "' + str(
-                                    doc.sentiment_score()) + '", "' + str(
-                                    doc.mixed()) + '")'
-                                print(stmt)
-                                cursor.execute(stmt)
+                    # parse for sentiment
+                    docs = provider.parse(input_texts, 'German')
 
-                            print "Updated " + str(len(docs)) + " entries in the database."
-                            mariadb_connection.commit()
+                    if docs is not None:
+                        print(len(docs))
+                        # update database
+                        for doc in docs:
+                            stmt = 'INSERT INTO sentiment(`sentimentProvider_id`, `comment_id`, `sentiment`, `mixed`) VALUES("' + str(
+                                provider.provider_id()) + '", "' + str(
+                                doc.id()) + '", "' + str(
+                                doc.sentiment_score()) + '", "' + str(
+                                doc.mixed()) + '")'
+                            print(stmt)
+                            cursor.execute(stmt)
+
+                        print "Updated " + str(len(docs)) + " entries in the database."
+                        mariadb_connection.commit()
 
 
         mariadb_connection.close()
