@@ -1,7 +1,14 @@
 ## File containing all the configuration variables ##
 
-key = ""
-secret = ""
+## Alchemy
+alchemy_key = ""
+
+##Semantria
+##Version of the current api
+version = "v1.0"
+
+semantria_key = ""
+semantria_secret = ""
 
 ##Semantria configuration keys
 german_conf = "60165dec9d4ea304c9bb248e82c71918"
@@ -9,8 +16,8 @@ german_conf_twitter_active = "3ad1741525fb9176d37d3a5b9767bca7"
 #english_conf = "0e12c835-05b7-4563-9f22-6f9478372da1"
 
 # database
-db_host =
-db_port =
-db_user =
-db_password =
-db_name =
+db_host = ''
+db_port = ''
+db_user = ''
+db_password = ''
+db_name = ''

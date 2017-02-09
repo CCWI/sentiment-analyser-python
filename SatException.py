@@ -1,0 +1,2 @@
+class SatException(Exception):
+    pass
