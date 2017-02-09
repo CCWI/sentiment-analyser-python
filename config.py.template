@@ -1,8 +1,5 @@
 ## File containing all the configuration variables ##
 
-##Version of the current api
-version = "v1.0"
-
 key = ""
 secret = ""
 

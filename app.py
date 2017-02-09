@@ -32,7 +32,7 @@ def update_db():
         flag = True
         while flag:
             # get data
-            cursor.execute("SELECT id,text FROM post WHERE sentiment IS NULL LIMIT 100")
+            cursor.execute("SELECT id,text FROM comment WHERE sentiment IS NULL LIMIT 100")
             print cursor.rowcount
             if cursor.rowcount == 0:
                 print("No values to be updated. Terminating update process.")
@@ -48,8 +48,9 @@ def update_db():
 
                 # update database
                 for doc in docs:
-                    if 'sentiment' in doc:
-                        stmt = "UPDATE post SET sentiment = " + str(doc['sentiment']) + '  WHERE id = "' + str(doc['id']) + '"'
+                    if 'sentiment_score' in doc:
+                        stmt = "UPDATE comment SET sentiment = " + str(doc['sentiment_score']) + '  WHERE id = "' + str(
+                            doc['id']) + '"'
                         cursor.execute(stmt)
 
                 print "Updated " + str(len(docs)) + " entries in the database."
@@ -72,29 +73,29 @@ def parse(input_texts, expected_lang):
     docs_more140 = []
     id_map = {}
     for comment in input_texts:
-        id = str(uuid.uuid4()).replace("-", "")
-        if id in id_map:
-            raise SatException("No duplicate ids allowed.")
+        # generate unique id
+        comment_id = str(uuid.uuid4()).replace("-", "")
+        while comment_id in id_map:
+            comment_id = str(uuid.uuid4()).replace("-", "")
 
-        id_map[id] = comment["id"]
+        # Map id to orignal id of the comment
+        id_map[comment_id] = comment["id"]
 
-        # clean the text data
+        # clean the text of any url
         comment["text"] = re.sub(r'https?://www\.[a-z\.0-9]+', '', comment["text"])
         comment["text"] = re.sub(r'www\.[a-z\.0-9]+', '', comment["text"])
 
-        docs.append({"id": id, "text": comment["text"]})
+        # add comment to list of overall comments and bigger/smalle 140 char
         if len(comment["text"]) > 140:
-            docs_more140.append({"id": id, "text": comment["text"]})
+            docs_more140.append({"id": comment_id, "text": comment["text"]})
         else:
-            docs_less140.append({"id": id, "text": comment["text"]})
+            docs_less140.append({"id": comment_id, "text": comment["text"]})
 
     # Initalise JSON serialiser and create semantria Session
     serializer = semantria.JsonSerializer()
     session = semantria.Session(key, secret, serializer, use_compression=True)
 
     # Use Configuration for specific language
-    lang_id_more140 = ""
-    lang_id_less140 = ""
     print("Setting Language: " + expected_lang)
 
     if expected_lang != "German":
@@ -115,43 +116,31 @@ def parse(input_texts, expected_lang):
     length_less140 = len(docs_less140)
     results_less140 = []
 
-    counter = 0
-    while counter < 20 and (len(results_more140) < length_more140 or len(results_less140) < length_less140):
+    while (len(results_more140) < length_more140) or (len(results_less140) < length_less140):
         print("Retrieving processed results...", "\r\n")
         time.sleep(2)
         # get processed documents
         status_more140 = session.getProcessedDocuments(lang_id_more140)
+        for data in status_more140:
+            if data["id"] in id_map:
+                data["id"] = id_map[data["id"]]
+            else:
+                status_more140.remove(data)
         print "Added " + str(len(status_more140)) + " entries to result_more140"
         results_more140.extend(status_more140)
-        satus_less140 = session.getProcessedDocuments(lang_id_less140)
-        print "Added " + str(len(satus_less140)) + " entries to result_less140"
-        results_less140.extend(satus_less140)
-        counter += 1
 
-    # Add sentiment value to all entries and remove those from list which arent in expected language
-    for data in results_less140:
-        doc = next((x for x in docs if x["id"] == data["id"]), None)
-        if doc is None:
-            break
-            # if data["language"] == expected_lang:
-        doc["sentiment"] = data["sentiment_score"]
-        doc["id"] = id_map[doc["id"]]
-            # else:
-            # docs.remove(doc)
+        status_less140 = session.getProcessedDocuments(lang_id_less140)
+        for data in status_less140:
+            if data["id"] in id_map:
+                data["id"] = id_map[data["id"]]
+            else:
+                status_less140.remove(data)
+        print "Added " + str(len(status_less140)) + " entries to result_less140"
+        results_less140.extend(status_less140)
 
-    for data in results_more140:
-        doc = next((x for x in docs if x["id"] == data["id"]), None)
-        if doc is None:
-            break
-            # if data["language"] == expected_lang:
-        doc["sentiment"] = data["sentiment_score"]
-        doc["id"] = id_map[doc["id"]]
-            # else:
-            # docs.remove(doc)
-
-    return docs
+    return results_more140 + results_less140
 
 
-while (True):
+while True:
     update_db()
-    time.sleep(600)
+    time.sleep(6000)
