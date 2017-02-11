@@ -5,6 +5,7 @@ import re
 import time
 import json
 from watson_developer_cloud import AlchemyLanguageV1
+from watson_developer_cloud import watson_developer_cloud_service
 
 # Uncomment when config file is present
 from config import semantria_key, semantria_secret, alchemy_key, german_conf_twitter_active, german_conf, db_host, db_name, db_user, db_password, db_port
@@ -133,14 +134,21 @@ class AlchemyProvider(SentimentProvider):
 
         for comment in input_texts:
             comment_text = comment["text"]
-            print(comment_text)
-            result = self._alchemy_language.sentiment(text=comment_text, language=expected_lang.lower())
-            print(json.dumps(result, indent=2))
-            doc_sentiment = result["docSentiment"]
-            sentiment_response = SentimentResponse(comment["id"],
-                                               doc_sentiment["score"] if "score" in doc_sentiment else 0,
-                                               doc_sentiment["mixed"] if 'mixed' in doc_sentiment else None)
-            responses.append(sentiment_response)
+            print("Comment: " + comment_text)
+            try:
+                if comment_text is None or len(comment_text.strip()) == 0:
+                    print("Skipping comment. Text is empty!")
+                else:
+                    result = self._alchemy_language.sentiment(text=comment_text, language=expected_lang.lower())
+                    print(json.dumps(result, indent=2))
+                    doc_sentiment = result["docSentiment"]
+                    sentiment_response = SentimentResponse(comment["id"],
+                                                       doc_sentiment["score"] if "score" in doc_sentiment else 0,
+                                                       doc_sentiment["mixed"] if 'mixed' in doc_sentiment else 0)
+                    responses.append(sentiment_response)
+            except watson_developer_cloud_service.WatsonException as e:
+                print(str(e) + " Comment: " + comment_text)
+
         return responses
 
 

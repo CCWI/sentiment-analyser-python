@@ -32,17 +32,17 @@ def update_db():
                              + str(provider.provider_id()) + " AND s.comment_id = c.id) LIMIT 100"
                 print(query_stmt)
                 cursor.execute(query_stmt)
-                print cursor.rowcount
+
                 if cursor.rowcount == 0:
                     print("No values to be updated. Terminating update process.")
                     flag = False
                 else:
+                    print("Rows to process: " + str(cursor.rowcount))
+
                     # prepare data
                     input_texts = []
                     for id, text in cursor:
                         input_texts.append({"id": id, "text": text})
-
-                    print(len(input_texts))
 
                     # parse for sentiment
                     docs = provider.parse(input_texts, 'German')
