@@ -4,9 +4,6 @@
 alchemy_key = ""
 
 ##Semantria
-##Version of the current api
-version = "v1.0"
-
 semantria_key = ""
 semantria_secret = ""
 

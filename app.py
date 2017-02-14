@@ -3,10 +3,13 @@ from SentimentProvider import AlchemyProvider, SemantriaProvider
 import time
 
 # Uncomment when config file is present
-from config import semantria_key, semantria_secret, german_conf_twitter_active, german_conf, db_host, db_name, db_user, db_password, db_port
+from config import semantria_key, semantria_secret, german_conf_twitter_active, german_conf, db_host, db_name, db_user, \
+    db_password, db_port
+
 
 def error_handling(statuscode, message):
     print message
+
 
 # Function to update the Db
 def update_db():
@@ -20,9 +23,7 @@ def update_db():
         cursor = mariadb_connection.cursor(buffered=True)
         print "Execute Select Statement"
 
-        providers = []
-        #providers.append(SemantriaProvider())
-        providers.append(AlchemyProvider())
+        providers = [SemantriaProvider(), AlchemyProvider()]
 
         for provider in providers:
             flag = True
@@ -62,11 +63,11 @@ def update_db():
                         print "Updated " + str(len(docs)) + " entries in the database."
                         mariadb_connection.commit()
 
-
         mariadb_connection.close()
     except mariadb.Error as error:
         print "Error: {}".format(error)
         return
+
 
 while True:
     update_db()
