@@ -8,7 +8,8 @@ from watson_developer_cloud import AlchemyLanguageV1
 from watson_developer_cloud import watson_developer_cloud_service
 
 # Uncomment when config file is present
-from config import semantria_key, semantria_secret, alchemy_key, german_conf_twitter_active, german_conf, db_host, db_name, db_user, db_password, db_port
+from config import semantria_key, semantria_secret, alchemy_key, german_conf_twitter_active, german_conf, db_host, \
+    db_name, db_user, db_password, db_port
 
 
 class SentimentProvider(object):
@@ -29,9 +30,12 @@ class SentimentProvider(object):
     def setprovider_id(self, provider_id):
         self._provider_id = provider_id
 
-    def parse(self, input_texts, expected_lang):
+    def parse_sentiment(self, input_texts, expected_lang):
         # Use Configuration for specific language
-        print("Parsing with provider " + self._name)
+        print("Parsing Sentiment with provider " + self._name)
+
+    def parse_keywords(self, input_texts, expected_lang):
+        print("Parsing Keywords with provider " + self.name)
 
 
 class SemantriaProvider(SentimentProvider):
@@ -39,8 +43,8 @@ class SemantriaProvider(SentimentProvider):
         SentimentProvider.__init__(self, 'Semantria', 1)
 
     # Function to parse input text to a maximum of 100 pieces in a certain language (only German supported atm).
-    def parse(self, input_texts, expected_lang):
-        SentimentProvider.parse(self, input_texts, expected_lang)
+    def parse_sentiment(self, input_texts, expected_lang):
+        SentimentProvider.parse_sentiment(self, input_texts, expected_lang)
 
         if len(input_texts) > 100:
             raise SatException("Too many inputs. Input documents limited at 100 per API call!")
@@ -121,14 +125,16 @@ class SemantriaProvider(SentimentProvider):
             responses.append(SentimentResponse(result['id'], result['sentiment_score'], None))
         return responses
 
+    def parse_keywords(self, input_texts, expected_lang):
+        print("Keyword parsing not implemeted yet for " + self.name())
 
 class AlchemyProvider(SentimentProvider):
     def __init__(self):
         SentimentProvider.__init__(self, 'Alchemy', 2)
         self._alchemy_language = AlchemyLanguageV1(api_key=alchemy_key)
 
-    def parse(self, input_texts, expected_lang):
-        SentimentProvider.parse(self, input_texts, expected_lang)
+    def parse_sentiment(self, input_texts, expected_lang):
+        SentimentProvider.parse_sentiment(self, input_texts, expected_lang)
 
         responses = []
 
@@ -139,17 +145,40 @@ class AlchemyProvider(SentimentProvider):
                 if comment_text is None or len(comment_text.strip()) == 0:
                     print("Skipping comment. Text is empty!")
                 else:
-                    result = self._alchemy_language.sentiment(text=comment_text, language=expected_lang.lower())
-                    print(json.dumps(result, indent=2))
-                    doc_sentiment = result["docSentiment"]
+                    result_sentiment = self._alchemy_language.sentiment(text=comment_text,
+                                                                        language=expected_lang.lower())
+                    print(json.dumps(result_sentiment, indent=2))
+                    doc_sentiment = result_sentiment["docSentiment"]
                     sentiment_response = SentimentResponse(comment["id"],
-                                                       doc_sentiment["score"] if "score" in doc_sentiment else 0,
-                                                       doc_sentiment["mixed"] if 'mixed' in doc_sentiment else 0)
+                                                           doc_sentiment["score"] if "score" in doc_sentiment else 0,
+                                                           doc_sentiment["mixed"] if 'mixed' in doc_sentiment else 0)
                     responses.append(sentiment_response)
             except watson_developer_cloud_service.WatsonException as e:
                 print(str(e) + " Comment: " + comment_text)
 
         return responses
+
+    def parse_keywords(self, input_texts, expected_lang):
+        SentimentProvider.parse_keywords(self, input_texts, expected_lang)
+
+        responses = []
+
+        for post in input_texts:
+            post_text = post["text"]
+            try:
+                if post_text is None or len(post_text.strip()) == 0:
+                    print("Skipping comment. Text is empty!")
+                else:
+                    result_keywords = self._alchemy_language.keywords(text=post_text,
+                                                                        language=expected_lang.lower())
+                    print(json.dumps(result_keywords, indent=2))
+                    #doc_sentiment = result_sentiment["docSentiment"]
+                    #sentiment_response = SentimentResponse(comment["id"],
+                    #                                       doc_sentiment["score"] if "score" in doc_sentiment else 0,
+                    #                                       doc_sentiment["mixed"] if 'mixed' in doc_sentiment else 0)
+                    #responses.append(sentiment_response)
+            except watson_developer_cloud_service.WatsonException as e:
+                print(str(e) + " Post: " + post_text)
 
 
 class SentimentResponse(object):
