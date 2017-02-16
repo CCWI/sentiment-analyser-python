@@ -35,7 +35,7 @@ class SentimentProvider(object):
         print("Parsing Sentiment with provider " + self._name)
 
     def parse_keywords(self, input_texts, expected_lang):
-        print("Parsing Keywords with provider " + self.name)
+        print("Parsing Keywords with provider " + self._name)
 
 
 class SemantriaProvider(SentimentProvider):
@@ -128,6 +128,7 @@ class SemantriaProvider(SentimentProvider):
     def parse_keywords(self, input_texts, expected_lang):
         print("Keyword parsing not implemeted yet for " + self.name())
 
+
 class AlchemyProvider(SentimentProvider):
     def __init__(self):
         SentimentProvider.__init__(self, 'Alchemy', 2)
@@ -170,15 +171,38 @@ class AlchemyProvider(SentimentProvider):
                     print("Skipping comment. Text is empty!")
                 else:
                     result_keywords = self._alchemy_language.keywords(text=post_text,
-                                                                        language=expected_lang.lower())
+                                                                      language=expected_lang.lower())
                     print(json.dumps(result_keywords, indent=2))
-                    #doc_sentiment = result_sentiment["docSentiment"]
-                    #sentiment_response = SentimentResponse(comment["id"],
-                    #                                       doc_sentiment["score"] if "score" in doc_sentiment else 0,
-                    #                                       doc_sentiment["mixed"] if 'mixed' in doc_sentiment else 0)
-                    #responses.append(sentiment_response)
+                    keywords_dict = result_keywords["keywords"]
+                    keywords_list = []
+                    for keyword in keywords_dict:
+                        if keyword["relevance"] > 0.6:
+                            keywords_list.append(keyword["text"])
+                    keywords_response = KeywordResponse(post["id"], keywords_list)
+                    responses.append(keywords_response)
             except watson_developer_cloud_service.WatsonException as e:
                 print(str(e) + " Post: " + post_text)
+
+        return responses
+
+
+class KeywordResponse(object):
+    def __init__(self, postid, keywords):
+        object.__init__(self)
+        self._postid = postid
+        self._keywords = keywords
+
+    def postid(self):
+        return self._postid
+
+    def setpostid(self, postid):
+        self._postid = postid
+
+    def keywords(self):
+        return self._keywords
+
+    def setkeywords(self, keywords):
+        self._keywords = keywords
 
 
 class SentimentResponse(object):

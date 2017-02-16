@@ -64,6 +64,17 @@ def update_keywords_for_comments(provider, cursor):
             print(len(docs))
             # update database
             for doc in docs:
+
+                for keyword in doc["keywords"]:
+                    # find wether keyword already exists
+                    find_stmt = "select id from keyword where keyword.keyword = " + keyword
+                    cursor.execute(find_stmt)
+                    if cursor.rowcount == 0:
+
+                    #else if cursor.rowcount > 1:
+                     #   raise ValueError
+                    #else :
+
                 stmt = "" #insert statement goes here
                 print(stmt)
                 cursor.execute(stmt)
