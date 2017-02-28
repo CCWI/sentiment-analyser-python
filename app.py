@@ -59,40 +59,49 @@ def update_keywords_for_comments(provider, cursor):
         for id, text in cursor:
             input_texts.append({"id": id, "text": text})
 
-        # parse for sentiment
+        # parse for keywords
         docs = provider.parse_keywords(input_texts, 'German')
 
         if docs is not None:
             print(len(docs))
             # update database
             for doc in docs:
+                post_id = doc.postid()
+                provider_id = provider.provider_id()
 
-                for i in range(len(doc.keywords())):
-                    # find wether keyword already exists
-                    keyword = doc.keywords()[i]
-                    relevance = doc.relevance()[i]
-                    keyword_id = None
-                    find_stmt = "select id from keyword where keyword.keyword = '" + keyword + "'"
-
-                    while(keyword_id is None):
-                        cursor.execute(find_stmt)
-                        if cursor.rowcount == 0:
-                            keyword_stmt = 'INSERT INTO keyword(`keyword`) VALUES("' + keyword + '")'
-                            print(keyword_stmt)
-                            cursor.execute(keyword_stmt)
-                        else:
-                            result = cursor.fetchall()
-                            keyword_id = result[0][0]
-
-                    post_has_keyword_statement = 'INSERT INTO post_has_keyword(`keywordProvider_id`, `post_id`, `keyword_id`, `relevance`) VALUES("' + str(
-                        provider.provider_id()) + '", "' + str(
-                        doc.postid()) + '", "' + str(
-                        keyword_id) + '", "' + str(
-                        relevance) + '")'
-                    print(post_has_keyword_statement)
-                    cursor.execute(post_has_keyword_statement)
+                if len(doc.keywords()) == 0:
+                    # insert dummy keyword
+                    insert_keyword(cursor, '', post_id, provider_id, '')
+                else:
+                    for i in range(len(doc.keywords())):
+                        # find wether keyword already exists
+                        keyword = doc.keywords()[i]
+                        relevance = doc.relevance()[i]
+                        insert_keyword(cursor, keyword, post_id, provider_id, relevance)
 
             print "Updated " + str(len(docs)) + " entries in the database."
+
+
+def insert_keyword(cursor, keyword, post_id, provider_id, relevance):
+    keyword_id = None
+    find_stmt = "SELECT id FROM keyword WHERE keyword.keyword = '" + keyword + "'"
+    while keyword_id is None:
+        cursor.execute(find_stmt)
+        if cursor.rowcount == 0:
+            keyword_stmt = 'INSERT INTO keyword(`keyword`) VALUES("' + keyword + '")'
+            print(keyword_stmt)
+            cursor.execute(keyword_stmt)
+        else:
+            result = cursor.fetchall()
+            keyword_id = result[0][0]
+    post_has_keyword_statement = 'INSERT INTO post_has_keyword(`keywordProvider_id`, `post_id`, `keyword_id`, `relevance`) VALUES("' + str(
+        provider_id) + '", "' + str(
+        post_id) + '", "' + str(
+        keyword_id) + '", "' + str(
+        relevance) + '")'
+    print(post_has_keyword_statement)
+    cursor.execute(post_has_keyword_statement)
+
 
 def update_sentiment_for_comments(provider, cursor):
     # get data
@@ -131,5 +140,5 @@ def update_sentiment_for_comments(provider, cursor):
 
 
 while True:
-    update_db(False, True)
+    update_db(True, True)
     time.sleep(6000)
