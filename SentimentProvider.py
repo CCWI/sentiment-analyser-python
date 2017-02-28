@@ -175,10 +175,12 @@ class AlchemyProvider(SentimentProvider):
                     print(json.dumps(result_keywords, indent=2))
                     keywords_dict = result_keywords["keywords"]
                     keywords_list = []
+                    relevance_list = []
                     for keyword in keywords_dict:
-                        if keyword["relevance"] > 0.6:
+                        if keyword["relevance"] >= 0.6:
                             keywords_list.append(keyword["text"])
-                    keywords_response = KeywordResponse(post["id"], keywords_list)
+                            relevance_list.append(keyword["relevance"])
+                    keywords_response = KeywordResponse(post["id"], keywords_list, relevance_list)
                     responses.append(keywords_response)
             except watson_developer_cloud_service.WatsonException as e:
                 print(str(e) + " Post: " + post_text)
@@ -187,10 +189,11 @@ class AlchemyProvider(SentimentProvider):
 
 
 class KeywordResponse(object):
-    def __init__(self, postid, keywords):
+    def __init__(self, postid, keywords, relevance):
         object.__init__(self)
         self._postid = postid
         self._keywords = keywords
+        self._relevance = relevance
 
     def postid(self):
         return self._postid
@@ -203,6 +206,12 @@ class KeywordResponse(object):
 
     def setkeywords(self, keywords):
         self._keywords = keywords
+
+    def relevance(self):
+        return self._relevance
+
+    def setrelevance(self, relevance):
+        self._relevance = relevance
 
 
 class SentimentResponse(object):

@@ -12,7 +12,7 @@ def error_handling(statuscode, message):
 
 
 # Function to update the Db
-def update_db():
+def update_db(sentiment = True, keywords = True):
     print "Updating Db entries..."
     print "Connection to DB."
     try:
@@ -29,8 +29,10 @@ def update_db():
         for provider in providers:
             flag = True
             while flag:
-                #update_sentiment_for_comments(provider, cursor)
-                update_keywords_for_comments(provider,cursor)
+                if sentiment is True:
+                    update_sentiment_for_comments(provider, cursor)
+                if keywords is True:
+                    update_keywords_for_comments(provider,cursor)
                 mariadb_connection.commit()
 
         mariadb_connection.close()
@@ -42,7 +44,7 @@ def update_db():
 
 def update_keywords_for_comments(provider, cursor):
     # get data
-    query_stmt = "SELECT id,text FROM post p LEFT JOIN post_has_keyword ON p.id = post_has_keyword.post_id WHERE post_has_keyword.keyword_id is NULL LIMIT 100"
+    query_stmt = "SELECT id,text FROM post p LEFT JOIN post_has_keyword ON p.id = post_has_keyword.post_id WHERE p.text IS NOT NULL AND length(trim(text)) != 0 AND post_has_keyword.keyword_id is NULL LIMIT 100"
     print(query_stmt)
     cursor.execute(query_stmt)
 
@@ -65,19 +67,30 @@ def update_keywords_for_comments(provider, cursor):
             # update database
             for doc in docs:
 
-                for keyword in doc["keywords"]:
+                for i in range(len(doc.keywords())):
                     # find wether keyword already exists
-                    find_stmt = "select id from keyword where keyword.keyword = " + keyword
-                    cursor.execute(find_stmt)
-                    if cursor.rowcount == 0:
+                    keyword = doc.keywords()[i]
+                    relevance = doc.relevance()[i]
+                    keyword_id = None
+                    find_stmt = "select id from keyword where keyword.keyword = '" + keyword + "'"
 
-                    #else if cursor.rowcount > 1:
-                     #   raise ValueError
-                    #else :
+                    while(keyword_id is None):
+                        cursor.execute(find_stmt)
+                        if cursor.rowcount == 0:
+                            keyword_stmt = 'INSERT INTO keyword(`keyword`) VALUES("' + keyword + '")'
+                            print(keyword_stmt)
+                            cursor.execute(keyword_stmt)
+                        else:
+                            result = cursor.fetchall()
+                            keyword_id = result[0][0]
 
-                stmt = "" #insert statement goes here
-                print(stmt)
-                cursor.execute(stmt)
+                    post_has_keyword_statement = 'INSERT INTO post_has_keyword(`keywordProvider_id`, `post_id`, `keyword_id`, `relevance`) VALUES("' + str(
+                        provider.provider_id()) + '", "' + str(
+                        doc.postid()) + '", "' + str(
+                        keyword_id) + '", "' + str(
+                        relevance) + '")'
+                    print(post_has_keyword_statement)
+                    cursor.execute(post_has_keyword_statement)
 
             print "Updated " + str(len(docs)) + " entries in the database."
 
@@ -118,5 +131,5 @@ def update_sentiment_for_comments(provider, cursor):
 
 
 while True:
-    update_db()
+    update_db(False, True)
     time.sleep(6000)
