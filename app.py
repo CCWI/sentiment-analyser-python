@@ -48,7 +48,7 @@ def update_keywords_for_pictures(provider, cursor):
     provider_id = provider.provider_id()
     # get data
     query_stmt = "SELECT id, picture FROM post p LEFT JOIN post_has_class ON p.id = post_has_class.post_id" + \
-                 " WHERE p.picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 100"
+                 " WHERE p.picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 5"
     print(query_stmt)
     cursor.execute(query_stmt)
 
@@ -76,7 +76,7 @@ def update_keywords_for_pictures(provider, cursor):
                     # insert dummy class
                     insert_class(cursor, '', post_id, provider_id, '')
                 else:
-                    for i in range(len(doc.keywords())):
+                    for i in range(len(doc.classes())):
                         # find wether keyword already exists
                         current_class = doc.classes()[i]
                         score = doc.score()[i]

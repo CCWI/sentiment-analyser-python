@@ -205,9 +205,9 @@ class AlchemyProvider(SentimentProvider):
                 if picture is None or len(picture.strip()) == 0:
                     print("Skipping URL. URL is empty!")
                 else:
-                    result_classes = self._visual_recognition.classify(images_url=picture)
-                    print(json.dumps(result_classes, indent=2))
-                    classes_dict = result_classes["classes"]
+                    result = self._visual_recognition.classify(images_url=picture)
+                    print(json.dumps(result, indent=2))
+                    classes_dict = result["images"][0]["classifiers"][0]["classes"]
                     classes_list = []
                     score_list = []
                     for class_item in classes_dict:
