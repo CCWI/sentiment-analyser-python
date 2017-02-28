@@ -4,11 +4,14 @@ import uuid
 import re
 import time
 import json
+from os.path import join, dirname
+from os import environ
 from watson_developer_cloud import AlchemyLanguageV1
+from watson_developer_cloud import VisualRecognitionV3
 from watson_developer_cloud import watson_developer_cloud_service
 
 # Uncomment when config file is present
-from config import semantria_key, semantria_secret, alchemy_key, german_conf_twitter_active, german_conf, db_host, \
+from config import semantria_key, semantria_secret, alchemy_key, visual_recognition_key, visual_recognition_version, german_conf_twitter_active, german_conf, db_host, \
     db_name, db_user, db_password, db_port
 
 
@@ -37,6 +40,8 @@ class SentimentProvider(object):
     def parse_keywords(self, input_texts, expected_lang):
         print("Parsing Keywords with provider " + self._name)
 
+    def parse_picture_keywords(self, input_urls):
+        print("Parsing Keyword from picture, with provider " + self._name)
 
 class SemantriaProvider(SentimentProvider):
     def __init__(self):
@@ -133,6 +138,8 @@ class AlchemyProvider(SentimentProvider):
     def __init__(self):
         SentimentProvider.__init__(self, 'Alchemy', 2)
         self._alchemy_language = AlchemyLanguageV1(api_key=alchemy_key)
+        self._visual_recognition = VisualRecognitionV3(version=visual_recognition_version,
+                                                       api_key=visual_recognition_key)
 
     def parse_sentiment(self, input_texts, expected_lang):
         SentimentProvider.parse_sentiment(self, input_texts, expected_lang)
@@ -187,6 +194,32 @@ class AlchemyProvider(SentimentProvider):
 
         return responses
 
+    def parse_picture_keywords(self, input_urls):
+        SentimentProvider.parse_picture_keywords(self, input_urls)
+
+        responses = []
+
+        for post in input_urls:
+            picture = post["picture"]
+            try:
+                if picture is None or len(picture.strip()) == 0:
+                    print("Skipping URL. URL is empty!")
+                else:
+                    result = self._visual_recognition.classify(images_url=picture)
+                    print(json.dumps(result, indent=2))
+                    classes_dict = result["images"][0]["classifiers"][0]["classes"]
+                    classes_list = []
+                    score_list = []
+                    for class_item in classes_dict:
+                        if class_item["score"] >= 0.6:
+                            classes_list.append(class_item["class"])
+                            score_list.append(class_item["score"])
+                    keywords_response = PictureKeywordResponse(post["id"], classes_list, score_list)
+                    responses.append(keywords_response)
+            except watson_developer_cloud_service.WatsonException as e:
+                print(str(e) + " URL: " + picture)
+
+        return responses
 
 class KeywordResponse(object):
     def __init__(self, postid, keywords, relevance):
@@ -212,6 +245,31 @@ class KeywordResponse(object):
 
     def setrelevance(self, relevance):
         self._relevance = relevance
+
+class PictureKeywordResponse(object):
+    def __init__(self, postid, classes, score):
+        object.__init__(self)
+        self._postid = postid
+        self._classes = classes
+        self._score = score
+
+    def postid(self):
+        return self._postid
+
+    def setpostid(self, postid):
+        self._postid = postid
+
+    def classes(self):
+        return self._classes
+
+    def setclasses(self, classes):
+        self._classes = classes
+
+    def score(self):
+        return self._score
+
+    def setscore(self, score):
+        self._score = score
 
 
 class SentimentResponse(object):
