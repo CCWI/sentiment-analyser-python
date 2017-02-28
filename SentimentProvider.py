@@ -11,7 +11,7 @@ from watson_developer_cloud import VisualRecognitionV3
 from watson_developer_cloud import watson_developer_cloud_service
 
 # Uncomment when config file is present
-from config import semantria_key, semantria_secret, alchemy_key, alchemy_version, german_conf_twitter_active, german_conf, db_host, \
+from config import semantria_key, semantria_secret, alchemy_key, visual_recognition_key, visual_recognition_version, german_conf_twitter_active, german_conf, db_host, \
     db_name, db_user, db_password, db_port
 
 
@@ -138,7 +138,8 @@ class AlchemyProvider(SentimentProvider):
     def __init__(self):
         SentimentProvider.__init__(self, 'Alchemy', 2)
         self._alchemy_language = AlchemyLanguageV1(api_key=alchemy_key)
-        self._visual_recognition = VisualRecognitionV3(version=alchemy_version, api_key=alchemy_key)
+        self._visual_recognition = VisualRecognitionV3(version=visual_recognition_version,
+                                                       api_key=visual_recognition_key)
 
     def parse_sentiment(self, input_texts, expected_lang):
         SentimentProvider.parse_sentiment(self, input_texts, expected_lang)

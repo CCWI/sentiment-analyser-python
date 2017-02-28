@@ -2,7 +2,8 @@
 
 ## Alchemy
 alchemy_key = ""
-alchemy_version = "2016-05-20"
+visual_recognition_version = "2016-05-20"
+visual_recognition_key = ""
 
 ##Semantria
 semantria_key = ""
