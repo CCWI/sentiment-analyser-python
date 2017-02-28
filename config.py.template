@@ -2,6 +2,7 @@
 
 ## Alchemy
 alchemy_key = ""
+alchemy_version = "2016-05-20"
 
 ##Semantria
 semantria_key = ""
