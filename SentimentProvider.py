@@ -37,6 +37,8 @@ class SentimentProvider(object):
     def parse_keywords(self, input_texts, expected_lang):
         print("Parsing Keywords with provider " + self._name)
 
+    def parse_picture_keywords(self, input_url):
+        print("Parsing Keyword from picture, with provider " + self._name)
 
 class SemantriaProvider(SentimentProvider):
     def __init__(self):
