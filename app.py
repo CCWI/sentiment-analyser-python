@@ -47,8 +47,8 @@ def update_db(sentiment = True, keywords = True, picture_keywords = True):
 def update_keywords_for_pictures(provider, cursor):
     provider_id = provider.provider_id()
     # get data
-    query_stmt = "SELECT id, picture FROM post p LEFT JOIN post_has_class ON p.id = post_has_class.post_id" + \
-                 " WHERE p.picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 5"
+    query_stmt = "SELECT id, full_picture FROM post p LEFT JOIN post_has_class ON p.id = post_has_class.post_id" + \
+                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 1"
     print(query_stmt)
     cursor.execute(query_stmt)
 
@@ -60,8 +60,8 @@ def update_keywords_for_pictures(provider, cursor):
 
         # prepare data
         input_urls = []
-        for id, picture in cursor:
-            input_urls.append({"id": id, "picture": picture})
+        for id, full_picture in cursor:
+            input_urls.append({"id": id, "picture": full_picture})
 
         # parse for keywords
         docs = provider.parse_picture_keywords(input_urls)
