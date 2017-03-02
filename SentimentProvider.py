@@ -1,18 +1,15 @@
-from SatException import SatException
-import semantria
-import uuid
+import json
 import re
 import time
-import json
-from os.path import join, dirname
-from os import environ
+import uuid
+
+import semantria
 from watson_developer_cloud import AlchemyLanguageV1
 from watson_developer_cloud import VisualRecognitionV3
 from watson_developer_cloud import watson_developer_cloud_service
 
-# Uncomment when config file is present
-from config import semantria_key, semantria_secret, alchemy_key, visual_recognition_key, visual_recognition_version, german_conf_twitter_active, german_conf, db_host, \
-    db_name, db_user, db_password, db_port
+from SatException import SatException
+from config import semantria_key, semantria_secret, alchemy_key, visual_recognition_key, visual_recognition_version, german_conf_twitter_active, german_conf
 
 
 class SentimentProvider(object):
@@ -41,7 +38,7 @@ class SentimentProvider(object):
         print("Parsing Keywords with provider " + self._name)
 
     def parse_picture_keywords(self, input_urls):
-        print("Parsing Keyword from picture, with provider " + self._name)
+        print("Parsing Keywords from picture, with provider " + self._name)
 
 class SemantriaProvider(SentimentProvider):
     def __init__(self):
