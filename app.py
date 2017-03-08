@@ -1,6 +1,7 @@
 import mysql.connector as mariadb
 from SentimentProvider import AlchemyProvider, SemantriaProvider
 import time
+import sys
 
 # Uncomment when config file is present
 from config import semantria_key, semantria_secret, german_conf_twitter_active, german_conf, db_host, db_name, db_user, \
@@ -29,12 +30,19 @@ def update_db(sentiment = True, keywords = True, picture_keywords = True):
         for provider in providers:
             flag = True
             while flag:
+                flag = False
                 if sentiment is True:
-                    update_sentiment_for_comments(provider, cursor)
+                    sentiment_comments = update_sentiment_for_comments(provider, cursor)
+                    if flag is False:
+                        flag = sentiment_comments
                 if keywords is True:
-                    update_keywords_for_comments(provider, cursor)
+                    keywords_comments = update_keywords_for_comments(provider, cursor)
+                    if flag is False:
+                        flag = keywords_comments
                 if picture_keywords is True:
-                    update_keywords_for_pictures(provider, cursor)
+                    keywords_pictures = update_keywords_for_pictures(provider, cursor)
+                    if flag is False:
+                        flag = keywords_pictures
                 mariadb_connection.commit()
 
         mariadb_connection.close()
@@ -48,13 +56,13 @@ def update_keywords_for_pictures(provider, cursor):
     provider_id = provider.provider_id()
     # get data
     query_stmt = "SELECT id, full_picture FROM post p LEFT JOIN post_has_class ON p.id = post_has_class.post_id" + \
-                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 1"
+                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 10"
     print(query_stmt)
     cursor.execute(query_stmt)
 
     if cursor.rowcount == 0:
         print("No values to be updated. Terminating update process.")
-        flag = False
+        return False
     else:
         print("Rows to process: " + str(cursor.rowcount))
 
@@ -66,7 +74,7 @@ def update_keywords_for_pictures(provider, cursor):
         # parse for keywords
         docs = provider.parse_picture_keywords(input_urls)
 
-        if docs is not None:
+        if docs is not None and len(docs) > 0:
             print(len(docs))
             # update database
             for doc in docs:
@@ -83,6 +91,10 @@ def update_keywords_for_pictures(provider, cursor):
                         insert_class(cursor, current_class, post_id, provider_id, score)
 
             print "Updated " + str(len(docs)) + " entries in the database."
+        else:
+            return False
+
+        return True
 
 
 def update_keywords_for_comments(provider, cursor):
@@ -95,7 +107,7 @@ def update_keywords_for_comments(provider, cursor):
 
     if cursor.rowcount == 0:
         print("No values to be updated. Terminating update process.")
-        flag = False
+        return False
     else:
         print("Rows to process: " + str(cursor.rowcount))
 
@@ -124,6 +136,8 @@ def update_keywords_for_comments(provider, cursor):
                         insert_keyword(cursor, keyword, post_id, provider_id, relevance)
 
             print "Updated " + str(len(docs)) + " entries in the database."
+
+        return True
 
 
 def insert_class(cursor, class_name, post_id, provider_id, score):
@@ -177,7 +191,7 @@ def update_sentiment_for_comments(provider, cursor):
 
     if cursor.rowcount == 0:
         print("No values to be updated. Terminating update process.")
-        flag = False
+        return False
     else:
         print("Rows to process: " + str(cursor.rowcount))
 
@@ -203,7 +217,18 @@ def update_sentiment_for_comments(provider, cursor):
 
             print "Updated " + str(len(docs)) + " entries in the database."
 
+        return True
 
-while True:
-    update_db(False, False, True)
-    time.sleep(6000)
+
+def is_true(string):
+    return string == 'True'
+
+if __name__ == "__main__":
+        while True:
+            if len(sys.argv) >= 4:
+                update_db(is_true(sys.argv[1]), is_true(sys.argv[2]), is_true(sys.argv[3]))
+            else:
+                update_db(True, True, True)
+            seconds = 6000
+            print 'Waiting ' + str(seconds) + ' seconds!'
+            time.sleep(seconds)

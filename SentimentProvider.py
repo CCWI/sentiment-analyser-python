@@ -145,7 +145,7 @@ class AlchemyProvider(SentimentProvider):
 
         for comment in input_texts:
             comment_text = comment["text"]
-            print("Comment: " + comment_text)
+            # print("Comment: " + comment_text)
             try:
                 if comment_text is None or len(comment_text.strip()) == 0:
                     print("Skipping comment. Text is empty!")
