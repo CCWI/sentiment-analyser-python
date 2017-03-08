@@ -1,6 +1,7 @@
 import mysql.connector as mariadb
 from SentimentProvider import AlchemyProvider, SemantriaProvider
 import time
+import sys
 
 # Uncomment when config file is present
 from config import semantria_key, semantria_secret, german_conf_twitter_active, german_conf, db_host, db_name, db_user, \
@@ -48,7 +49,7 @@ def update_keywords_for_pictures(provider, cursor):
     provider_id = provider.provider_id()
     # get data
     query_stmt = "SELECT id, full_picture FROM post p LEFT JOIN post_has_class ON p.id = post_has_class.post_id" + \
-                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 1"
+                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 10"
     print(query_stmt)
     cursor.execute(query_stmt)
 
@@ -204,6 +205,10 @@ def update_sentiment_for_comments(provider, cursor):
             print "Updated " + str(len(docs)) + " entries in the database."
 
 
-while True:
-    update_db(False, False, True)
-    time.sleep(6000)
+def is_true(string):
+    return string == 'True'
+
+if __name__ == "__main__":
+    while True:
+        update_db(is_true(sys.argv[1]), is_true(sys.argv[2]), is_true(sys.argv[3]))
+        time.sleep(6000)
