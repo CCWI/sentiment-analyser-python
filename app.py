@@ -185,7 +185,7 @@ def insert_keyword(cursor, keyword, post_id, provider_id, relevance):
 def update_sentiment_for_comments(provider, cursor):
     # get data
     query_stmt = "SELECT id, text FROM comment c WHERE id NOT IN (SELECT comment_id FROM sentiment s WHERE sentimentProvider_id = " \
-                 + str(provider.provider_id()) + " AND s.comment_id = c.id) LIMIT 100"
+                 + str(provider.provider_id()) + " AND s.comment_id = c.id) AND text IS NOT NULL AND length(trim(text)) != 0 LIMIT 100"
     print(query_stmt)
     cursor.execute(query_stmt)
 
