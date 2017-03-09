@@ -177,7 +177,10 @@ class AlchemyProvider(SentimentProvider):
                     result_keywords = self._alchemy_language.keywords(text=post_text,
                                                                       language=expected_lang.lower())
                     print(json.dumps(result_keywords, indent=2))
-                    keywords_dict = result_keywords["keywords"]
+                    if 'keywords' in result_keywords:
+                        keywords_dict = result_keywords["keywords"]
+                    else:
+                        keywords_dict = {}
                     keywords_list = []
                     relevance_list = []
                     for keyword in keywords_dict:
