@@ -168,7 +168,7 @@ def insert_keyword(cursor, keyword, post_id, provider_id, relevance):
         cursor.execute(find_stmt)
         if cursor.rowcount == 0:
             keyword_stmt = 'INSERT INTO keyword(`keyword`) VALUES("' + keyword + '")'
-            print(keyword_stmt)
+            # print(keyword_stmt)
             cursor.execute(keyword_stmt)
         else:
             result = cursor.fetchall()
