@@ -56,7 +56,7 @@ def update_keywords_for_pictures(provider, cursor):
     provider_id = provider.provider_id()
     # get data
     query_stmt = "SELECT id, full_picture FROM post p LEFT JOIN post_has_class ON p.id = post_has_class.post_id" + \
-                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 10"
+                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL ORDER BY rand() LIMIT 10"
     print(query_stmt)
     cursor.execute(query_stmt)
 
