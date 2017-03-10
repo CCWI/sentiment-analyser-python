@@ -177,7 +177,10 @@ class AlchemyProvider(SentimentProvider):
                     result_keywords = self._alchemy_language.keywords(text=post_text,
                                                                       language=expected_lang.lower())
                     print(json.dumps(result_keywords, indent=2))
-                    keywords_dict = result_keywords["keywords"]
+                    if 'keywords' in result_keywords:
+                        keywords_dict = result_keywords["keywords"]
+                    else:
+                        keywords_dict = {}
                     keywords_list = []
                     relevance_list = []
                     for keyword in keywords_dict:
@@ -204,15 +207,19 @@ class AlchemyProvider(SentimentProvider):
                 else:
                     result = self._visual_recognition.classify(images_url=picture)
                     print(json.dumps(result, indent=2))
-                    classes_dict = result["images"][0]["classifiers"][0]["classes"]
-                    classes_list = []
-                    score_list = []
-                    for class_item in classes_dict:
-                        if class_item["score"] >= 0.6:
-                            classes_list.append(class_item["class"])
-                            score_list.append(class_item["score"])
-                    keywords_response = PictureKeywordResponse(post["id"], classes_list, score_list)
-                    responses.append(keywords_response)
+                    images_dict = result["images"][0]
+                    if 'classifiers' in images_dict:
+                        classifiers_dict = images_dict["classifiers"][0]
+                        if 'classes' in classifiers_dict:
+                            classes_dict = classifiers_dict["classes"]
+                            classes_list = []
+                            score_list = []
+                            for class_item in classes_dict:
+                                if class_item["score"] >= 0.6:
+                                    classes_list.append(class_item["class"])
+                                    score_list.append(class_item["score"])
+                            keywords_response = PictureKeywordResponse(post["id"], classes_list, score_list)
+                            responses.append(keywords_response)
             except watson_developer_cloud_service.WatsonException as e:
                 print(str(e) + " URL: " + picture)
 

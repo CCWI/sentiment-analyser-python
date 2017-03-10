@@ -56,7 +56,7 @@ def update_keywords_for_pictures(provider, cursor):
     provider_id = provider.provider_id()
     # get data
     query_stmt = "SELECT id, full_picture FROM post p LEFT JOIN post_has_class ON p.id = post_has_class.post_id" + \
-                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL LIMIT 10"
+                 " WHERE p.full_picture IS NOT NULL AND post_has_class.class_id is NULL ORDER BY rand() LIMIT 10"
     print(query_stmt)
     cursor.execute(query_stmt)
 
@@ -168,7 +168,7 @@ def insert_keyword(cursor, keyword, post_id, provider_id, relevance):
         cursor.execute(find_stmt)
         if cursor.rowcount == 0:
             keyword_stmt = 'INSERT INTO keyword(`keyword`) VALUES("' + keyword + '")'
-            print(keyword_stmt)
+            # print(keyword_stmt)
             cursor.execute(keyword_stmt)
         else:
             result = cursor.fetchall()
@@ -177,7 +177,7 @@ def insert_keyword(cursor, keyword, post_id, provider_id, relevance):
         provider_id) + '", "' + str(
         post_id) + '", "' + str(
         keyword_id) + '", "' + str(
-        relevance) + '")'
+        relevance) + '") ON DUPLICATE KEY UPDATE keyword_id=keyword_id'
     print(post_has_keyword_statement)
     cursor.execute(post_has_keyword_statement)
 
@@ -185,7 +185,7 @@ def insert_keyword(cursor, keyword, post_id, provider_id, relevance):
 def update_sentiment_for_comments(provider, cursor):
     # get data
     query_stmt = "SELECT id, text FROM comment c WHERE id NOT IN (SELECT comment_id FROM sentiment s WHERE sentimentProvider_id = " \
-                 + str(provider.provider_id()) + " AND s.comment_id = c.id) LIMIT 100"
+                 + str(provider.provider_id()) + " AND s.comment_id = c.id) AND text IS NOT NULL AND length(trim(text)) != 0 LIMIT 100"
     print(query_stmt)
     cursor.execute(query_stmt)
 
