@@ -177,7 +177,7 @@ def insert_keyword(cursor, keyword, post_id, provider_id, relevance):
         provider_id) + '", "' + str(
         post_id) + '", "' + str(
         keyword_id) + '", "' + str(
-        relevance) + '")'
+        relevance) + '") ON DUPLICATE KEY UPDATE keyword_id=keyword_id'
     print(post_has_keyword_statement)
     cursor.execute(post_has_keyword_statement)
 
