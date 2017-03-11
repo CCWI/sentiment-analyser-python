@@ -159,7 +159,7 @@ class AlchemyProvider(SentimentProvider):
                                                            doc_sentiment["mixed"] if 'mixed' in doc_sentiment else 0)
                     responses.append(sentiment_response)
             except watson_developer_cloud_service.WatsonException as e:
-                print(str(e) + " Comment: " + comment_text)
+                print(str(e)) # + " Comment: " + comment_text)
 
         return responses
 
